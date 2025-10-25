@@ -261,7 +261,13 @@ class PriceCalculator:
         freshness_scores = []
         for quote in quotes:
             if quote.cached_at:
-                age_hours = (now - quote.cached_at).total_seconds() / 3600
+                # Ensure both datetimes have the same timezone awareness
+                cached_time = quote.cached_at
+                if cached_time.tzinfo is not None and now.tzinfo is None:
+                    now = now.replace(tzinfo=cached_time.tzinfo)
+                elif cached_time.tzinfo is None and now.tzinfo is not None:
+                    cached_time = cached_time.replace(tzinfo=now.tzinfo)
+                age_hours = (now - cached_time).total_seconds() / 3600
                 # Score decreases linearly from 1.0 at 0 hours to 0.0 at 168 hours (1 week)
                 freshness = max(0.0, 1.0 - (age_hours / 168.0))
                 freshness_scores.append(freshness)

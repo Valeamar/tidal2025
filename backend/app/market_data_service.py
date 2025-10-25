@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class PriceQuote:
     """Represents a price quote from a market data source"""
     supplier: str
-    price: float
+    base_price: float
     unit: str
     product_name: str
     location: str
@@ -40,13 +40,17 @@ class PriceQuote:
     reliability_score: Optional[float] = None
     contact_info: Optional[str] = None
     specifications: Optional[str] = None
+    purity_grade: Optional[str] = None
+    pack_size: Optional[str] = None
+    promotions: Optional[str] = None
+    price_breaks: Optional[Dict[int, float]] = None
     cached_at: Optional[datetime] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         return {
             "supplier": self.supplier,
-            "price": self.price,
+            "base_price": self.base_price,
             "unit": self.unit,
             "product_name": self.product_name,
             "location": self.location,
@@ -57,6 +61,10 @@ class PriceQuote:
             "reliability_score": self.reliability_score,
             "contact_info": self.contact_info,
             "specifications": self.specifications,
+            "purity_grade": self.purity_grade,
+            "pack_size": self.pack_size,
+            "promotions": self.promotions,
+            "price_breaks": self.price_breaks,
             "cached_at": self.cached_at.isoformat() if self.cached_at else None
         }
 
@@ -153,12 +161,12 @@ class USDADataSource(DataSource):
                     if not price_str or price_str == "(D)":  # (D) means data withheld
                         continue
                     
-                    price = float(price_str)
+                    base_price = float(price_str)
                     unit = item.get("unit_desc", "")
                     
                     quote = PriceQuote(
                         supplier="USDA Market Average",
-                        price=price,
+                        base_price=base_price,
                         unit=unit,
                         product_name=product_name,
                         location=f"{location.state}, {location.country}",
@@ -276,7 +284,7 @@ class AgSupplyWebScraper(DataSource):
                     if not price_match:
                         continue
                     
-                    price = float(price_match.group(1))
+                    base_price = float(price_match.group(1))
                     
                     # Extract unit if available
                     unit_elem = product.select_one(selectors.get("unit", ""))
@@ -284,7 +292,7 @@ class AgSupplyWebScraper(DataSource):
                     
                     quote = PriceQuote(
                         supplier=site["name"],
-                        price=price,
+                        base_price=base_price,
                         unit=unit,
                         product_name=name,
                         location=f"{location.city}, {location.state}",
@@ -350,7 +358,7 @@ class MockDataSource(DataSource):
             
             quote = PriceQuote(
                 supplier=supplier,
-                price=round(price, 2),
+                base_price=round(price, 2),
                 unit="per unit" if "seed" in normalized_name else "per gallon" if "fuel" in normalized_name else "per lb",
                 product_name=product_name,
                 location=f"{location.city}, {location.state}",
@@ -449,7 +457,7 @@ class MarketDataService:
                 if not quote.supplier or not quote.product_name:
                     continue
                 
-                if quote.price <= 0:
+                if quote.base_price <= 0:
                     continue
                 
                 # Clean and normalize data
@@ -480,7 +488,7 @@ class MarketDataService:
         
         return PriceQuote(
             supplier=quote_dict["supplier"],
-            price=quote_dict["price"],
+            base_price=quote_dict.get("base_price", quote_dict.get("price", 0.0)),
             unit=quote_dict["unit"],
             product_name=quote_dict["product_name"],
             location=quote_dict["location"],
@@ -491,6 +499,10 @@ class MarketDataService:
             reliability_score=quote_dict.get("reliability_score"),
             contact_info=quote_dict.get("contact_info"),
             specifications=quote_dict.get("specifications"),
+            purity_grade=quote_dict.get("purity_grade"),
+            pack_size=quote_dict.get("pack_size"),
+            promotions=quote_dict.get("promotions"),
+            price_breaks=quote_dict.get("price_breaks"),
             cached_at=cached_at
         )
     
@@ -516,7 +528,7 @@ class MarketDataService:
         }
         
         if quotes:
-            prices = [quote.price for quote in quotes]
+            prices = [quote.base_price for quote in quotes]
             availability_info["price_range"] = {
                 "min": min(prices),
                 "max": max(prices),
@@ -552,7 +564,7 @@ class MarketDataService:
                 
                 stats = source_stats[quote.source]
                 stats["quote_count"] += 1
-                stats["avg_price"] = (stats["avg_price"] * (stats["quote_count"] - 1) + quote.price) / stats["quote_count"]
+                stats["avg_price"] = (stats["avg_price"] * (stats["quote_count"] - 1) + quote.base_price) / stats["quote_count"]
                 if quote.reliability_score:
                     stats["avg_reliability"] = (stats["avg_reliability"] * (stats["quote_count"] - 1) + quote.reliability_score) / stats["quote_count"]
             
