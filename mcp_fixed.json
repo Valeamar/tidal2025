@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "awslabs.aws-api-mcp-server": {
+      "command": "python",
+      "args": [
+        "-m", "uv", "tool", "run",
+        "awslabs.aws-api-mcp-server@latest"
+      ],
+      "env": {
+        "AWS_REGION": "us-east-1"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

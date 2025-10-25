@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "fetch": {
+      "command": "python",
+      "args": ["-m", "uv", "tool", "run", "mcp-server-fetch"],
+      "env": {},
+      "disabled": true,
+      "autoApprove": []
+    },
+    "awslabs.aws-api-mcp-server": {
+      "command": "python",
+      "args": [
+        "-m", "uv", "tool", "run",
+        "awslabs.aws-api-mcp-server@latest"
+      ],
+      "env": {
+        "AWS_REGION": "us-east-1"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
