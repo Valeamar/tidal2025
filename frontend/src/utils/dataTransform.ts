@@ -1,6 +1,6 @@
-import { 
-  AnalysisResponse, 
-  LegacyAnalysisResponse, 
+import {
+  AnalysisResponse,
+  LegacyAnalysisResponse,
   ProductAnalysisResult,
   LegacyPriceAnalysis,
   LegacySupplierRecommendation,
@@ -12,60 +12,60 @@ import {
  * Transform backend API response to legacy format for existing UI components
  * This allows us to maintain backward compatibility while transitioning to new API structure
  */
-export const transformAnalysisResponse = (backendResponse: AnalysisResponse): LegacyAnalysisResponse => {
-  // Transform product analyses
-  const analyses: LegacyPriceAnalysis[] = backendResponse.productAnalyses.map((productResult: ProductAnalysisResult) => {
+export const transformAnalysisResponse = (backendResponse: any): LegacyAnalysisResponse => {
+  // Transform product analyses (handle snake_case from backend)
+  const analyses: LegacyPriceAnalysis[] = backendResponse.product_analyses.map((productResult: any) => {
     // Transform suppliers
-    const suppliers: LegacySupplierRecommendation[] = productResult.analysis.suppliers.map(supplier => ({
+    const suppliers: LegacySupplierRecommendation[] = productResult.analysis.suppliers.map((supplier: any) => ({
       name: supplier.name,
       listPrice: supplier.price,
       moq: supplier.moq,
-      contactInfo: supplier.contactInfo,
+      contactInfo: supplier.contact_info,
       // Note: Backend doesn't have promotions or priceBreaks in current structure
       // These would need to be added to backend or handled differently
     }));
 
     // Transform optimization recommendations to simple strings for legacy format
-    const recommendations: string[] = productResult.analysis.recommendations.map(rec => rec.description);
+    const recommendations: string[] = productResult.analysis.recommendations.map((rec: any) => rec.description);
 
     return {
-      productName: productResult.productName,
+      productName: productResult.product_name,
       priceRanges: {
-        p10: productResult.analysis.effectiveDeliveredCost.p10 || 0,
-        p25: productResult.analysis.effectiveDeliveredCost.p25 || 0,
-        p35: productResult.analysis.effectiveDeliveredCost.p35 || 0,
-        p50: productResult.analysis.effectiveDeliveredCost.p50 || 0,
-        p90: productResult.analysis.effectiveDeliveredCost.p90 || 0,
+        p10: productResult.analysis.effective_delivered_cost.p10 || 0,
+        p25: productResult.analysis.effective_delivered_cost.p25 || 0,
+        p35: productResult.analysis.effective_delivered_cost.p35 || 0,
+        p50: productResult.analysis.effective_delivered_cost.p50 || 0,
+        p90: productResult.analysis.effective_delivered_cost.p90 || 0,
       },
       effectiveCost: {
-        basePrice: productResult.analysis.targetPrice || productResult.analysis.effectiveDeliveredCost.p35 || 0,
+        basePrice: productResult.analysis.target_price || productResult.analysis.effective_delivered_cost.p35 || 0,
         logisticsCost: 0, // Backend doesn't separate these costs in current structure
         taxes: 0,
         wastage: 0,
-        totalCost: productResult.individualBudget.totalCost,
+        totalCost: productResult.individual_budget.total_cost,
       },
-      confidenceScore: productResult.analysis.confidenceScore,
+      confidenceScore: productResult.analysis.confidence_score,
       suppliers,
       recommendations,
       dataAvailability: {
-        marketData: productResult.dataAvailability.priceDataFound,
-        supplierData: productResult.dataAvailability.supplierDataFound,
-        forecastData: productResult.dataAvailability.forecastDataAvailable,
+        marketData: productResult.data_availability.price_data_found,
+        supplierData: productResult.data_availability.supplier_data_found,
+        forecastData: productResult.data_availability.forecast_data_available,
       },
     };
   });
 
   // Transform optimization recommendations
   const recommendations: LegacyOptimizationRecommendation[] = [];
-  
+
   // Extract optimization recommendations from all products
-  backendResponse.productAnalyses.forEach(productResult => {
-    productResult.analysis.recommendations.forEach(rec => {
+  backendResponse.product_analyses.forEach((productResult: any) => {
+    productResult.analysis.recommendations.forEach((rec: any) => {
       recommendations.push({
         type: mapOptimizationType(rec.type),
         title: getOptimizationTitle(rec.type),
         description: rec.description,
-        potentialSavings: rec.potentialSavings,
+        potentialSavings: rec.potential_savings,
         confidence: rec.confidence || 0,
       });
     });
@@ -74,15 +74,15 @@ export const transformAnalysisResponse = (backendResponse: AnalysisResponse): Le
   return {
     analyses,
     overallBudget: {
-      totalCost: backendResponse.overallBudget.totalCost,
-      potentialSavings: backendResponse.overallBudget.high - backendResponse.overallBudget.target,
-      confidenceScore: backendResponse.dataQualityReport.overallDataCoverage,
+      totalCost: backendResponse.overall_budget.total_cost,
+      potentialSavings: backendResponse.overall_budget.high - backendResponse.overall_budget.target,
+      confidenceScore: backendResponse.data_quality_report.overall_data_coverage,
     },
     recommendations,
     dataQualityReport: {
-      overallScore: backendResponse.dataQualityReport.overallDataCoverage,
-      missingDataSources: backendResponse.dataQualityReport.limitedDataProducts,
-      recommendations: [`${backendResponse.dataQualityReport.noDataProducts.length} products have limited data availability`],
+      overallScore: backendResponse.data_quality_report.overall_data_coverage,
+      missingDataSources: backendResponse.data_quality_report.limited_data_products,
+      recommendations: [`${backendResponse.data_quality_report.no_data_products.length} products have limited data availability`],
     },
   };
 };
@@ -134,25 +134,51 @@ const getOptimizationTitle = (type: OptimizationRecommendation['type']): string 
 };
 
 /**
- * Transform frontend request to backend format
+ * Transform frontend request to backend format (camelCase to snake_case)
  */
 export const transformAnalysisRequest = (frontendRequest: any): any => {
   // Handle both legacy and new request formats
   if (frontendRequest.farmInfo) {
     // Legacy format - transform to new format
     return {
-      farmLocation: {
-        streetAddress: frontendRequest.farmInfo.street,
+      farm_location: {
+        street_address: frontendRequest.farmInfo.street,
         city: frontendRequest.farmInfo.city,
         state: frontendRequest.farmInfo.state,
         county: frontendRequest.farmInfo.county || '',
-        zipCode: frontendRequest.farmInfo.zipCode,
+        zip_code: frontendRequest.farmInfo.zipCode,
         country: frontendRequest.farmInfo.country,
       },
-      products: frontendRequest.products,
+      products: frontendRequest.products.map((product: any) => ({
+        id: product.id,
+        name: product.name,
+        quantity: product.quantity,
+        unit: product.unit,
+        specifications: product.specifications,
+        preferred_brands: product.preferredBrands,
+        max_price: product.maxPrice,
+      })),
     };
   }
-  
-  // Already in new format
-  return frontendRequest;
+
+  // Transform camelCase to snake_case for backend
+  return {
+    farm_location: {
+      street_address: frontendRequest.farmLocation.streetAddress,
+      city: frontendRequest.farmLocation.city,
+      state: frontendRequest.farmLocation.state,
+      county: frontendRequest.farmLocation.county,
+      zip_code: frontendRequest.farmLocation.zipCode,
+      country: frontendRequest.farmLocation.country,
+    },
+    products: frontendRequest.products.map((product: any) => ({
+      id: product.id,
+      name: product.name,
+      quantity: product.quantity,
+      unit: product.unit,
+      specifications: product.specifications,
+      preferred_brands: product.preferredBrands,
+      max_price: product.maxPrice,
+    })),
+  };
 };
