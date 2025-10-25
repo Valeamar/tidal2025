@@ -113,7 +113,13 @@ class IntelligentRecommendationEngine:
         )
         all_recommendations.extend(risk_recommendations)
         
-        # 6. Alternative recommendations for limited data
+        # 6. Inventory management strategies
+        inventory_recommendations = self._generate_inventory_management_recommendations(
+            product, aws_bi_result, economic_analysis, farm_location
+        )
+        all_recommendations.extend(inventory_recommendations)
+        
+        # 7. Alternative recommendations for limited data
         if not aws_bi_result or market_data_quality.get("overall_score", 0) < 0.5:
             fallback_recommendations = self._generate_fallback_recommendations(
                 product, market_data_quality, economic_analysis
@@ -458,7 +464,88 @@ class IntelligentRecommendationEngine:
                         confidence=0.7
                     ))
         
-        return recommendations 
+        return recommendations
+    
+    def _generate_inventory_management_recommendations(
+        self,
+        product: ProductInput,
+        aws_bi_result: Optional[AWSBIAnalysisResult],
+        economic_analysis: Dict[str, Any],
+        farm_location: FarmLocation
+    ) -> List[OptimizationRecommendation]:
+        """
+        Generate inventory management strategies including optimal storage timing and quantities.
+        
+        Requirements: 5.7 (inventory management strategies including optimal storage timing and quantities)
+        """
+        recommendations = []
+        
+        # Storage timing recommendations based on seasonality
+        seasonality = economic_analysis.get("seasonality_analysis", {})
+        current_month = datetime.now().month
+        
+        # Recommend early storage for seasonal products
+        if seasonality.get("seasonal_savings_potential_pct", 0) > 10:
+            optimal_month = seasonality.get("optimal_purchase_month", current_month)
+            
+            # If we're approaching optimal purchase month
+            months_to_optimal = (optimal_month - current_month) % 12
+            if months_to_optimal <= 2 and months_to_optimal > 0:
+                storage_savings = product.quantity * (product.max_price or 100) * 0.08  # 8% storage savings
+                
+                recommendations.append(OptimizationRecommendation(
+                    type=OptimizationType.SEASONAL_OPTIMIZATION,
+                    description=f"Optimal purchase window approaching in {months_to_optimal} month(s) - consider storage capacity",
+                    potential_savings=storage_savings,
+                    action_required=f"Prepare storage facilities for bulk purchase in month {optimal_month}",
+                    confidence=0.8
+                ))
+        
+        # Quantity optimization for storage efficiency
+        if product.quantity > 1000:  # Large quantity threshold
+            # Recommend splitting large orders for better storage management
+            split_savings = product.quantity * (product.max_price or 100) * 0.02  # 2% efficiency savings
+            
+            recommendations.append(OptimizationRecommendation(
+                type=OptimizationType.BULK_DISCOUNT,
+                description=f"Large quantity ({product.quantity} units) may benefit from staged delivery",
+                potential_savings=split_savings,
+                action_required="Consider splitting order into 2-3 deliveries to optimize storage costs and cash flow",
+                confidence=0.7
+            ))
+        
+        # Storage cost vs. price volatility analysis
+        if aws_bi_result and aws_bi_result.forecast_result:
+            forecast = aws_bi_result.forecast_result
+            if forecast.trend == "increasing" and len(forecast.predictions) > 30:
+                # Calculate storage cost vs. price increase
+                current_price = forecast.predictions[0].predicted_price
+                future_price = forecast.predictions[30].predicted_price  # 30 days out
+                
+                price_increase = ((future_price - current_price) / current_price) * 100
+                if price_increase > 5:  # More than 5% increase expected
+                    storage_value = (future_price - current_price) * product.quantity
+                    
+                    recommendations.append(OptimizationRecommendation(
+                        type=OptimizationType.TIMING,
+                        description=f"Price forecast shows {price_increase:.1f}% increase over 30 days - storage may be profitable",
+                        potential_savings=storage_value * 0.7,  # Account for storage costs
+                        action_required="Evaluate storage costs vs. projected price increases for inventory buildup",
+                        confidence=forecast.confidence
+                    ))
+        
+        # Shelf life and spoilage considerations
+        if any(term in product.name.lower() for term in ['seed', 'fertilizer', 'chemical']):
+            # Products with limited shelf life
+            recommendations.append(OptimizationRecommendation(
+                type=OptimizationType.TIMING,
+                description="Product has limited shelf life - optimize purchase timing with usage schedule",
+                potential_savings=0.0,
+                action_required="Align purchase timing with planting schedule to minimize spoilage risk",
+                confidence=0.9
+            ))
+        
+        return recommendations
    
     def _generate_risk_recommendations(
         self,
@@ -555,15 +642,26 @@ class IntelligentRecommendationEngine:
                 confidence=0.8
             ))
         
-        # Group purchasing recommendations
-        if product.quantity < 100:  # Small quantity threshold
-            estimated_savings = product.quantity * (product.max_price or 100) * 0.05  # 5% group discount estimate
+        # Enhanced group purchasing recommendations (Requirement 5.4)
+        if product.quantity < 500:  # Expanded threshold for group purchasing
+            # Calculate potential group purchase benefits
+            group_discount_rate = 0.08 if product.quantity < 100 else 0.05  # Higher discount for smaller quantities
+            estimated_savings = product.quantity * (product.max_price or 100) * group_discount_rate
             
             recommendations.append(OptimizationRecommendation(
                 type=OptimizationType.GROUP_PURCHASE,
-                description=f"Small quantity ({product.quantity} units) may benefit from group purchasing",
+                description=f"Quantity ({product.quantity} units) qualifies for {group_discount_rate*100:.0f}% group purchasing discount",
                 potential_savings=estimated_savings,
-                action_required="Explore cooperative purchasing with other local farmers",
+                action_required="Contact local farm cooperatives or organize group purchase with neighboring farms",
+                confidence=0.7
+            ))
+            
+            # Regional cooperative recommendations
+            recommendations.append(OptimizationRecommendation(
+                type=OptimizationType.GROUP_PURCHASE,
+                description="Regional farm cooperatives may offer volume discounts and shared logistics",
+                potential_savings=estimated_savings * 1.2,  # Additional logistics savings
+                action_required="Research regional agricultural cooperatives and buying groups in your area",
                 confidence=0.6
             ))
         
@@ -578,16 +676,47 @@ class IntelligentRecommendationEngine:
                 confidence=0.6
             ))
         
-        # Quality vs. cost recommendations
+        # Enhanced substitute product recommendations (Requirement 5.5)
         if product.specifications and "premium" in product.specifications.lower():
-            estimated_savings = product.quantity * (product.max_price or 100) * 0.1  # 10% premium reduction
+            estimated_savings = product.quantity * (product.max_price or 100) * 0.12  # 12% premium reduction
             
             recommendations.append(OptimizationRecommendation(
                 type=OptimizationType.SUBSTITUTE,
-                description="Premium specifications may be adding unnecessary cost",
+                description="Premium grade may be substitutable with standard grade for significant savings",
                 potential_savings=estimated_savings,
-                action_required="Evaluate if standard grade products meet operational requirements",
+                action_required="Compare premium vs. standard grade specifications against actual crop requirements",
+                confidence=0.7
+            ))
+        
+        # Generic vs. brand name substitutions
+        if product.preferred_brands and len(product.preferred_brands) > 0:
+            brand_savings = product.quantity * (product.max_price or 100) * 0.15  # 15% brand premium
+            
+            recommendations.append(OptimizationRecommendation(
+                type=OptimizationType.SUBSTITUTE,
+                description="Generic alternatives may offer equivalent performance at lower cost",
+                potential_savings=brand_savings,
+                action_required="Research generic or store-brand alternatives with similar active ingredients",
+                confidence=0.6
+            ))
+        
+        # Product category substitutions
+        product_lower = product.name.lower()
+        if "fertilizer" in product_lower:
+            recommendations.append(OptimizationRecommendation(
+                type=OptimizationType.SUBSTITUTE,
+                description="Consider alternative fertilizer formulations or organic options",
+                potential_savings=product.quantity * (product.max_price or 100) * 0.08,
+                action_required="Evaluate liquid vs. granular fertilizers or organic alternatives for cost savings",
                 confidence=0.5
+            ))
+        elif "seed" in product_lower:
+            recommendations.append(OptimizationRecommendation(
+                type=OptimizationType.SUBSTITUTE,
+                description="Alternative seed varieties may offer better value or performance",
+                potential_savings=product.quantity * (product.max_price or 100) * 0.06,
+                action_required="Compare different seed varieties for yield potential vs. cost",
+                confidence=0.6
             ))
         
         return recommendations

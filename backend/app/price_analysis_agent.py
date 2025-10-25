@@ -150,7 +150,7 @@ class PriceAnalysisAgent:
         
         # Step 4: Generate price analysis with AWS BI integration
         price_analysis = self._generate_price_analysis(
-            product_id, product, economic_analysis, aws_bi_result
+            product_id, product, economic_analysis, aws_bi_result, price_quotes, farm_location
         )
         
         # Step 5: Calculate individual product budget
@@ -338,7 +338,9 @@ class PriceAnalysisAgent:
         product_id: str,
         product: ProductInput,
         economic_analysis: Dict[str, Any],
-        aws_bi_result: Optional[AWSBIAnalysisResult]
+        aws_bi_result: Optional[AWSBIAnalysisResult],
+        price_quotes: List[PriceQuote],
+        farm_location: FarmLocation
     ) -> PriceAnalysis:
         """
         Generate comprehensive price analysis combining economic analysis and AWS BI insights.
