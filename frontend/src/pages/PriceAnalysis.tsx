@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ProductInputForm from '../components/ProductInputForm';
+import { BudgetReport } from '../components/BudgetReport';
 import { AnalysisRequest, AnalysisResponse } from '../types';
 import { analyzeProducts } from '../services/api';
 
@@ -11,7 +12,7 @@ const PriceAnalysis: React.FC = () => {
   const handleFormSubmit = async (data: AnalysisRequest) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const result = await analyzeProducts(data);
       setAnalysisResult(result);
@@ -34,7 +35,7 @@ const PriceAnalysis: React.FC = () => {
           Agricultural Input Price Analysis
         </h1>
         <p className="text-gray-600">
-          Enter your farm information and product requirements to get personalized 
+          Enter your farm information and product requirements to get personalized
           price analysis and optimization recommendations.
         </p>
       </div>
@@ -56,34 +57,10 @@ const PriceAnalysis: React.FC = () => {
       )}
 
       {analysisResult ? (
-        <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-medium text-green-800">Analysis Complete</h3>
-                <p className="text-green-700">
-                  Your price analysis has been completed successfully. Results will be displayed here once the backend is implemented.
-                </p>
-              </div>
-              <button
-                onClick={handleNewAnalysis}
-                className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors duration-200"
-              >
-                New Analysis
-              </button>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Analysis Results</h3>
-            <div className="text-center py-8">
-              <div className="text-gray-400 text-4xl mb-4">📊</div>
-              <p className="text-gray-600">
-                Results display will be implemented in task 8.3
-              </p>
-            </div>
-          </div>
-        </div>
+        <BudgetReport
+          analysisResult={analysisResult}
+          onNewAnalysis={handleNewAnalysis}
+        />
       ) : (
         <ProductInputForm onSubmit={handleFormSubmit} isLoading={isLoading} />
       )}
