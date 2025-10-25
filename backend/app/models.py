@@ -114,6 +114,7 @@ class AnalyzeResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     timestamp: datetime
+    details: Optional[Dict[str, Any]] = None
 
 class ErrorDetail(BaseModel):
     code: str

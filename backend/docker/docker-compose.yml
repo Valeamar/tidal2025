@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # Main application
+  farmer-budget-optimizer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: farmer-budget-optimizer
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - LOG_JSON=true
+    env_file:
+      - ../.env.production
+    volumes:
+      - ../logs:/app/logs
+      - ../data:/app/data
+      - ../cache:/app/cache
+      - ../backups:/app/backups
+    networks:
+      - farmer-budget-net
+    depends_on:
+      - localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # LocalStack for AWS services (development/testing)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=s3,forecast,quicksight,comprehend
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - farmer-budget-net
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: farmer-budget-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - farmer-budget-net
+    depends_on:
+      - farmer-budget-optimizer
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: farmer-budget-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - farmer-budget-net
+    profiles:
+      - monitoring
+
+  # Grafana for visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: farmer-budget-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - farmer-budget-net
+    profiles:
+      - monitoring
+
+networks:
+  farmer-budget-net:
+    driver: bridge
+
+volumes:
+  localstack_data:
+  nginx_logs:
+  prometheus_data:
+  grafana_data:
