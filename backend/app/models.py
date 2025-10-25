@@ -125,3 +125,83 @@ class ErrorResponse(BaseModel):
     error: ErrorDetail
     request_id: Optional[str] = None
     timestamp: datetime
+
+# Price Calculator Models
+class PriceQuote(BaseModel):
+    """Price quote from market data sources"""
+    supplier: str
+    product_name: str
+    base_price: float = Field(..., gt=0)
+    unit: str
+    moq: Optional[int] = Field(None, ge=1)
+    location: Optional[str] = None
+    delivery_terms: Optional[str] = None
+    lead_time: Optional[int] = Field(None, ge=0)
+    reliability_score: Optional[float] = Field(None, ge=0, le=1)
+    contact_info: Optional[str] = None
+    purity_grade: Optional[str] = None
+    pack_size: Optional[str] = None
+    promotions: Optional[str] = None
+    price_breaks: Optional[Dict[int, float]] = None
+    cached_at: Optional[datetime] = None
+
+class LogisticsCostBreakdown(BaseModel):
+    """Detailed logistics cost breakdown"""
+    freight_estimate: float = Field(..., ge=0)
+    fuel_surcharge: float = Field(..., ge=0)
+    handling_fees: float = Field(..., ge=0)
+    delivery_premium: float = Field(..., ge=0)
+    total: float = Field(..., ge=0)
+
+class TaxesAndFeesBreakdown(BaseModel):
+    """Detailed taxes and fees breakdown"""
+    sales_tax: float = Field(..., ge=0)
+    regulatory_fees: float = Field(..., ge=0)
+    certification_costs: float = Field(..., ge=0)
+    payment_processing: float = Field(..., ge=0)
+    total: float = Field(..., ge=0)
+
+class EffectiveCostBreakdown(BaseModel):
+    """Complete effective cost calculation breakdown"""
+    base_price: float = Field(..., ge=0)
+    logistics_cost: float = Field(..., ge=0)
+    taxes_and_fees: float = Field(..., ge=0)
+    wastage_adjustment: float = Field(..., ge=0)
+    total_effective_cost: float = Field(..., ge=0)
+    cost_breakdown: Dict[str, float]
+
+class ProductSpecAnalysis(BaseModel):
+    """Product specification analysis results"""
+    canonical_spec: str
+    purity_grade: Optional[str] = None
+    pack_size: Optional[str] = None
+    substitute_skus: List[str] = []
+    quality_adjustment: float = Field(..., ge=0)
+
+class SupplierOfferEvaluation(BaseModel):
+    """Supplier offer evaluation results"""
+    supplier: str
+    base_price: float = Field(..., gt=0)
+    effective_price: float = Field(..., gt=0)
+    moq_met: bool
+    price_break_applied: bool
+    promotion_applied: bool
+    lead_time: int = Field(..., ge=0)
+    reliability_score: float = Field(..., ge=0, le=1)
+    value_score: float = Field(..., ge=0, le=1)
+    moq_shortfall: Optional[int] = None
+    price_break_savings: Optional[float] = None
+
+class LocationFactors(BaseModel):
+    """Location-based cost factors"""
+    regional_market_density: float = Field(..., ge=0.5, le=1.5)
+    distance_to_suppliers: float = Field(..., ge=0)
+    local_competition_level: float = Field(..., ge=0.5, le=1.5)
+    transportation_infrastructure: float = Field(..., ge=0.5, le=1.5)
+
+class SeasonalityFactors(BaseModel):
+    """Seasonality analysis for pricing"""
+    current_season_multiplier: float = Field(..., ge=0.5, le=2.0)
+    optimal_purchase_month: int = Field(..., ge=1, le=12)
+    seasonal_savings_potential: float = Field(..., ge=0, le=100)
+    planting_calendar_alignment: float = Field(..., ge=0.5, le=1.5)
