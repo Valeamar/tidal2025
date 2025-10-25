@@ -9,7 +9,8 @@ from contextlib import contextmanager
 
 from .models import (
     PriceAnalysis, ProductAnalysisResult, AnalyzeResponse,
-    SupplierRecommendation, OptimizationRecommendation
+    SupplierRecommendation, OptimizationRecommendation,
+    PriceAlert, PurchaseRecord
 )
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,8 @@ class MarketDataCache:
         self.cache_dir = Path(cache_dir)
         self.market_data_file = self.cache_dir / "market_data_cache.json"
         self.analysis_results_file = self.cache_dir / "analysis_results.json"
+        self.price_alerts_file = self.cache_dir / "price_alerts.json"
+        self.purchase_records_file = self.cache_dir / "purchase_records.json"
         
         # Ensure cache directory exists
         self._ensure_cache_directory()
@@ -53,6 +56,14 @@ class MarketDataCache:
             if not self.analysis_results_file.exists():
                 self._write_json_file(self.analysis_results_file, {})
                 logger.info(f"Initialized analysis results file: {self.analysis_results_file}")
+            
+            if not self.price_alerts_file.exists():
+                self._write_json_file(self.price_alerts_file, {})
+                logger.info(f"Initialized price alerts file: {self.price_alerts_file}")
+            
+            if not self.purchase_records_file.exists():
+                self._write_json_file(self.purchase_records_file, {})
+                logger.info(f"Initialized purchase records file: {self.purchase_records_file}")
         except Exception as e:
             raise StorageError(f"Failed to initialize cache files: {e}")
     
@@ -224,6 +235,143 @@ class MarketDataCache:
             return removed_count
         except Exception as e:
             raise StorageError(f"Failed to clear expired market data: {e}")
+    
+    # Advanced Optimization Features Storage Methods
+    
+    def save_price_alert(self, alert: PriceAlert) -> None:
+        """
+        Save a price alert to storage.
+        
+        Args:
+            alert: PriceAlert object to save
+        """
+        try:
+            alerts_data = self._read_json_file(self.price_alerts_file)
+            
+            # Convert Pydantic model to dict for JSON serialization
+            alert_dict = alert.model_dump()
+            alerts_data[alert.alert_id] = alert_dict
+            
+            self._write_json_file(self.price_alerts_file, alerts_data)
+            logger.info(f"Saved price alert: {alert.alert_id}")
+        except Exception as e:
+            raise StorageError(f"Failed to save price alert {alert.alert_id}: {e}")
+    
+    def list_price_alerts(self, status: Optional[str] = None, 
+                         product_name: Optional[str] = None,
+                         limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        List price alerts with optional filtering.
+        
+        Args:
+            status: Filter by alert status (active, triggered, expired, cancelled)
+            product_name: Filter by product name
+            limit: Maximum number of alerts to return
+            
+        Returns:
+            List of alert dictionaries
+        """
+        try:
+            alerts_data = self._read_json_file(self.price_alerts_file)
+            
+            alerts = []
+            for alert_id, alert_dict in alerts_data.items():
+                # Apply filters
+                if status and alert_dict.get("status") != status:
+                    continue
+                if product_name and alert_dict.get("product_name") != product_name:
+                    continue
+                
+                alerts.append(alert_dict)
+            
+            # Sort by creation date (newest first)
+            alerts.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+            
+            return alerts[:limit]
+        except Exception as e:
+            logger.error(f"Failed to list price alerts: {e}")
+            return []
+    
+    def cancel_price_alert(self, alert_id: str) -> bool:
+        """
+        Cancel a price alert by setting its status to cancelled.
+        
+        Args:
+            alert_id: ID of the alert to cancel
+            
+        Returns:
+            True if alert was cancelled, False if not found
+        """
+        try:
+            alerts_data = self._read_json_file(self.price_alerts_file)
+            
+            if alert_id not in alerts_data:
+                return False
+            
+            alerts_data[alert_id]["status"] = "cancelled"
+            alerts_data[alert_id]["cancelled_at"] = datetime.now(timezone.utc).isoformat()
+            
+            self._write_json_file(self.price_alerts_file, alerts_data)
+            logger.info(f"Cancelled price alert: {alert_id}")
+            return True
+        except Exception as e:
+            raise StorageError(f"Failed to cancel price alert {alert_id}: {e}")
+    
+    def save_purchase_record(self, purchase: PurchaseRecord) -> None:
+        """
+        Save a purchase record to storage.
+        
+        Args:
+            purchase: PurchaseRecord object to save
+        """
+        try:
+            records_data = self._read_json_file(self.purchase_records_file)
+            
+            # Convert Pydantic model to dict for JSON serialization
+            purchase_dict = purchase.model_dump()
+            records_data[purchase.purchase_id] = purchase_dict
+            
+            self._write_json_file(self.purchase_records_file, records_data)
+            logger.info(f"Saved purchase record: {purchase.purchase_id}")
+        except Exception as e:
+            raise StorageError(f"Failed to save purchase record {purchase.purchase_id}: {e}")
+    
+    def get_purchase_history(self, product_name: str, 
+                           limit: int = 50,
+                           supplier: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get purchase history for a specific product.
+        
+        Args:
+            product_name: Name of the product
+            limit: Maximum number of records to return
+            supplier: Optional supplier filter
+            
+        Returns:
+            List of purchase record dictionaries
+        """
+        try:
+            records_data = self._read_json_file(self.purchase_records_file)
+            
+            history = []
+            for purchase_id, purchase_dict in records_data.items():
+                # Filter by product name
+                if purchase_dict.get("product_name") != product_name:
+                    continue
+                
+                # Filter by supplier if specified
+                if supplier and purchase_dict.get("supplier") != supplier:
+                    continue
+                
+                history.append(purchase_dict)
+            
+            # Sort by purchase date (newest first)
+            history.sort(key=lambda x: x.get("purchase_date", ""), reverse=True)
+            
+            return history[:limit]
+        except Exception as e:
+            logger.error(f"Failed to get purchase history for {product_name}: {e}")
+            return []
 
 
 class SessionStorage:

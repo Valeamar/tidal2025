@@ -10,7 +10,8 @@ import logging
 from .storage import MarketDataCache, SessionStorage, get_market_cache, get_session_storage
 from .models import (
     ProductInput, FarmLocation, AnalyzeResponse, 
-    SupplierRecommendation, OptimizationRecommendation
+    SupplierRecommendation, OptimizationRecommendation,
+    PriceAlert, PurchaseRecord
 )
 
 logger = logging.getLogger(__name__)
@@ -247,6 +248,101 @@ class StorageManager:
         except Exception as e:
             logger.error(f"Failed to generate storage statistics: {e}")
             return {"error": str(e)}
+    
+    # Advanced Optimization Features Operations
+    
+    def save_price_alert(self, alert: PriceAlert) -> None:
+        """
+        Save a price alert.
+        
+        Args:
+            alert: PriceAlert object to save
+        """
+        try:
+            self.market_cache.save_price_alert(alert)
+            logger.info(f"Saved price alert: {alert.alert_id}")
+        except Exception as e:
+            logger.error(f"Failed to save price alert: {e}")
+            raise
+    
+    def list_price_alerts(self, status: Optional[str] = None, 
+                         product_name: Optional[str] = None,
+                         limit: int = 20) -> List[Dict[str, Any]]:
+        """
+        List price alerts with optional filtering.
+        
+        Args:
+            status: Filter by alert status
+            product_name: Filter by product name
+            limit: Maximum number of alerts to return
+            
+        Returns:
+            List of alert dictionaries
+        """
+        try:
+            alerts = self.market_cache.list_price_alerts(status, product_name, limit)
+            logger.info(f"Retrieved {len(alerts)} price alerts")
+            return alerts
+        except Exception as e:
+            logger.error(f"Failed to list price alerts: {e}")
+            return []
+    
+    def cancel_price_alert(self, alert_id: str) -> bool:
+        """
+        Cancel a price alert.
+        
+        Args:
+            alert_id: ID of the alert to cancel
+            
+        Returns:
+            True if alert was cancelled, False if not found
+        """
+        try:
+            success = self.market_cache.cancel_price_alert(alert_id)
+            if success:
+                logger.info(f"Cancelled price alert: {alert_id}")
+            else:
+                logger.warning(f"Price alert not found: {alert_id}")
+            return success
+        except Exception as e:
+            logger.error(f"Failed to cancel price alert: {e}")
+            return False
+    
+    def save_purchase_record(self, purchase: PurchaseRecord) -> None:
+        """
+        Save a purchase record.
+        
+        Args:
+            purchase: PurchaseRecord object to save
+        """
+        try:
+            self.market_cache.save_purchase_record(purchase)
+            logger.info(f"Saved purchase record: {purchase.purchase_id}")
+        except Exception as e:
+            logger.error(f"Failed to save purchase record: {e}")
+            raise
+    
+    def get_purchase_history(self, product_name: str, 
+                           limit: int = 50,
+                           supplier: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get purchase history for a specific product.
+        
+        Args:
+            product_name: Name of the product
+            limit: Maximum number of records to return
+            supplier: Optional supplier filter
+            
+        Returns:
+            List of purchase record dictionaries
+        """
+        try:
+            history = self.market_cache.get_purchase_history(product_name, limit, supplier)
+            logger.info(f"Retrieved {len(history)} purchase records for {product_name}")
+            return history
+        except Exception as e:
+            logger.error(f"Failed to get purchase history: {e}")
+            return []
 
 
 # Convenience function for easy access

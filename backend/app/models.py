@@ -299,6 +299,156 @@ class AWSBIAnalysisResult(BaseModel):
     aws_services_used: List[str] = []
     processing_time_seconds: float = Field(..., ge=0)
 
+# Advanced Optimization Features Models (Task 7.2)
+
+class PriceAlertRequest(BaseModel):
+    """Request model for creating price alerts"""
+    product_name: str = Field(..., min_length=1, max_length=200)
+    target_price: float = Field(..., gt=0)
+    farm_location: FarmLocation
+    contact_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    alert_type: str = Field(default="price_drop", description="Type of alert: price_drop, price_rise, availability")
+    threshold_percentage: Optional[float] = Field(None, ge=0, le=100, description="Percentage threshold for alerts")
+    expiry_date: Optional[datetime] = Field(None, description="When the alert should expire")
+
+class PriceAlert(BaseModel):
+    """Price alert data model"""
+    alert_id: str
+    product_name: str
+    target_price: float
+    current_price: Optional[float] = None
+    farm_location: FarmLocation
+    contact_email: str
+    alert_type: str
+    threshold_percentage: Optional[float] = None
+    status: str = Field(default="active", description="active, triggered, expired, cancelled")
+    created_at: datetime
+    last_checked: Optional[datetime] = None
+    notifications_sent: int = Field(default=0)
+    expiry_date: Optional[datetime] = None
+
+class BundlingAnalysisRequest(BaseModel):
+    """Request model for cross-product bundling analysis"""
+    products: List[ProductInput] = Field(..., min_items=2, max_items=20)
+    farm_location: FarmLocation
+    max_suppliers: Optional[int] = Field(default=5, ge=1, le=10)
+    include_group_purchasing: bool = Field(default=True)
+
+class BundlingOpportunity(BaseModel):
+    """Individual bundling opportunity"""
+    supplier: str
+    products_included: List[str]
+    individual_total_cost: float = Field(..., ge=0)
+    bundle_cost: float = Field(..., ge=0)
+    savings_amount: float = Field(..., ge=0)
+    savings_percentage: float = Field(..., ge=0, le=100)
+    minimum_order_quantity: str
+    delivery_terms: str
+    bundle_validity: str
+    bundle_type: str = Field(description="supplier_bundle, group_purchase, cooperative")
+    confidence_score: float = Field(..., ge=0, le=1)
+
+class BundlingAnalysisResponse(BaseModel):
+    """Response model for bundling analysis"""
+    analysis_id: str
+    products_analyzed: int
+    bundling_opportunities: List[BundlingOpportunity]
+    total_opportunities: int
+    max_potential_savings: float = Field(..., ge=0)
+    recommended_bundle: Optional[BundlingOpportunity] = None
+    analysis_date: datetime
+
+class PurchaseTrackingRequest(BaseModel):
+    """Request model for purchase tracking"""
+    product_name: str = Field(..., min_length=1, max_length=200)
+    actual_price: float = Field(..., gt=0)
+    quantity: float = Field(..., gt=0)
+    supplier: str = Field(..., min_length=1, max_length=200)
+    purchase_date: str = Field(..., description="ISO date string")
+    target_price: Optional[float] = Field(None, gt=0)
+    analysis_session_id: Optional[str] = None
+    delivery_date: Optional[str] = None
+    payment_terms: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=1000)
+
+class PurchaseRecord(BaseModel):
+    """Purchase record data model"""
+    purchase_id: str
+    product_name: str
+    supplier: str
+    actual_price: float = Field(..., gt=0)
+    target_price: Optional[float] = Field(None, gt=0)
+    quantity: float = Field(..., gt=0)
+    total_cost: float = Field(..., ge=0)
+    purchase_date: str
+    delivery_date: Optional[str] = None
+    payment_terms: Optional[str] = None
+    price_variance: float
+    price_variance_percentage: float
+    performance_rating: str = Field(description="excellent, good, needs_improvement, no_target_available")
+    recorded_at: datetime
+    notes: Optional[str] = None
+
+class PurchasePerformanceSummary(BaseModel):
+    """Purchase performance summary"""
+    rating: str
+    savings_vs_target: float = Field(..., ge=0)
+    overspend_vs_target: float = Field(..., ge=0)
+    variance_percentage: float
+    total_purchases: int = Field(default=1)
+    average_performance: Optional[float] = Field(None, ge=0, le=1)
+
+class PurchaseTrackingResponse(BaseModel):
+    """Response model for purchase tracking"""
+    purchase_id: str
+    purchase_record: PurchaseRecord
+    performance_summary: PurchasePerformanceSummary
+    insights: List[str]
+    recommendations: List[str]
+    comparison_data: Optional[Dict[str, Any]] = None
+
+class FinancingOption(BaseModel):
+    """Individual financing option"""
+    option: str
+    total_cost: float = Field(..., ge=0)
+    upfront_payment: float = Field(..., ge=0)
+    monthly_payment: float = Field(..., ge=0)
+    total_interest: float = Field(..., ge=0)
+    savings_vs_full_price: float = Field(..., ge=0)
+    cash_flow_impact: str
+    recommendation_score: int = Field(..., ge=0, le=100)
+    pros: List[str]
+    cons: List[str]
+    terms_months: Optional[int] = Field(None, ge=0)
+    interest_rate: Optional[float] = Field(None, ge=0)
+
+class FinancingAnalysisRequest(BaseModel):
+    """Request model for financing analysis"""
+    total_purchase_amount: float = Field(..., gt=0)
+    cash_available: float = Field(..., ge=0)
+    credit_score: Optional[int] = Field(None, ge=300, le=850)
+    preferred_terms_months: Optional[int] = Field(None, ge=1, le=60)
+    risk_tolerance: str = Field(default="medium", description="low, medium, high")
+    seasonal_cash_flow: Optional[Dict[str, float]] = Field(None, description="Monthly cash flow projections")
+
+class FinancingRecommendation(BaseModel):
+    """Financing recommendation"""
+    recommended_option: str
+    reasoning: str
+    key_benefits: List[str]
+    considerations: List[str]
+    cash_flow_analysis: Optional[Dict[str, Any]] = None
+
+class FinancingAnalysisResponse(BaseModel):
+    """Response model for financing analysis"""
+    analysis_id: str
+    purchase_amount: float
+    cash_available: float
+    financing_options: List[FinancingOption]
+    recommendation: FinancingRecommendation
+    analysis_date: datetime
+    notes: List[str]
+
 # Data transformation models for AWS service inputs/outputs
 
 class ForecastDatasetInput(BaseModel):

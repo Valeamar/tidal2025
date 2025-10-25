@@ -448,13 +448,13 @@ class PriceAnalysisAgent:
         supplier_data_found = any(quote.supplier for quote in price_quotes)
         
         # AWS BI data availability
-        forecast_available = (
+        forecast_available = bool(
             aws_bi_result and 
             aws_bi_result.forecast_result and 
             len(aws_bi_result.forecast_result.predictions) > 0
         )
         
-        sentiment_available = (
+        sentiment_available = bool(
             aws_bi_result and 
             aws_bi_result.sentiment_analysis is not None
         )
