@@ -173,7 +173,9 @@
     - Add correlation analysis with external factors
     - _Requirements: 3.3, 5.1, 5.2, 5.6_
 
-  - [ ] 9.3 Add AWS Comprehend sentiment analysis
+  - [x] 9.3 Add AWS Comprehend sentiment analysis
+
+
     - Implement market news and report analysis
     - Create supply risk scoring based on sentiment
     - Add demand outlook predictions
@@ -198,7 +200,14 @@
     - Test API endpoints with valid and invalid inputs
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 10.3 Set up deployment configuration
+
+
+  - [x] 10.3 Set up deployment configuration
+
+
+
+
+
     - Configure FastAPI application for production
     - Set up environment variables for AWS credentials and configuration
     - Create simple deployment scripts for EC2 or local development
