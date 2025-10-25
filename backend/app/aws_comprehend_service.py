@@ -293,8 +293,9 @@ class AWSComprehendService:
             return {
                 'prediction_completed': False,
                 'error': str(e)
-            }    def
- generate_risk_based_recommendations(self, risk_scores: Dict, 
+            }
+    
+    def generate_risk_based_recommendations(self, risk_scores: Dict, 
                                           demand_predictions: Dict,
                                           current_prices: Dict) -> Dict:
         """
