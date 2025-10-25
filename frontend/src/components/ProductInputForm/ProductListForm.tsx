@@ -1,5 +1,6 @@
 import React from 'react';
 import { ProductInput } from '../../types';
+import CustomSelect from '../CustomSelect';
 
 interface ProductListFormProps {
   products: ProductInput[];
@@ -33,7 +34,7 @@ const ProductListForm: React.FC<ProductListFormProps> = ({ products, onChange, e
   ];
 
   return (
-    <div className="glass-card p-8 group hover:scale-[1.02] transition-all duration-300">
+    <div className="glass-card p-8">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-gradient-accent rounded-xl flex items-center justify-center">
@@ -135,18 +136,14 @@ const ProductListForm: React.FC<ProductListFormProps> = ({ products, onChange, e
                 <label htmlFor={`product-unit-${index}`} className="block text-sm font-medium text-gray-300 mb-3">
                   Unit *
                 </label>
-                <select
+                <CustomSelect
                   id={`product-unit-${index}`}
                   value={product.unit}
-                  onChange={(e) => updateProduct(index, 'unit', e.target.value)}
-                  className={`modern-input w-full ${errors[`product_${index}_unit`] ? 'border-red-400 bg-red-500/10' : ''
-                    }`}
-                >
-                  <option value="">Select unit</option>
-                  {commonUnits.map(unit => (
-                    <option key={unit} value={unit}>{unit}</option>
-                  ))}
-                </select>
+                  onChange={(value) => updateProduct(index, 'unit', value)}
+                  options={commonUnits}
+                  placeholder="Select unit"
+                  error={!!errors[`product_${index}_unit`]}
+                />
                 {errors[`product_${index}_unit`] && (
                   <p className="mt-2 text-sm text-red-300 flex items-center space-x-2">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

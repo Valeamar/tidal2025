@@ -45,6 +45,9 @@ const ProductInputForm: React.FC<ProductInputFormProps> = ({ onSubmit, isLoading
         if (!farmInfo.location.country.trim()) {
             newErrors.country = 'Country is required';
         }
+        if (!farmInfo.location.county.trim()) {
+            newErrors.county = 'County is required';
+        }
 
         // Validate products
         const validProducts = products.filter(p => p.name.trim() && p.quantity > 0 && p.unit.trim());

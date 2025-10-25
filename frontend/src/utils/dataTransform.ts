@@ -145,7 +145,7 @@ export const transformAnalysisRequest = (frontendRequest: any): any => {
         street_address: frontendRequest.farmInfo.street,
         city: frontendRequest.farmInfo.city,
         state: frontendRequest.farmInfo.state,
-        county: frontendRequest.farmInfo.county || '',
+        county: frontendRequest.farmInfo.county || 'Unknown County',
         zip_code: frontendRequest.farmInfo.zipCode,
         country: frontendRequest.farmInfo.country,
       },
@@ -154,9 +154,9 @@ export const transformAnalysisRequest = (frontendRequest: any): any => {
         name: product.name,
         quantity: product.quantity,
         unit: product.unit,
-        specifications: product.specifications,
-        preferred_brands: product.preferredBrands,
-        max_price: product.maxPrice,
+        specifications: product.specifications || undefined,
+        preferred_brands: product.preferredBrands || undefined,
+        max_price: product.maxPrice || undefined,
       })),
     };
   }
@@ -167,7 +167,7 @@ export const transformAnalysisRequest = (frontendRequest: any): any => {
       street_address: frontendRequest.farmLocation.streetAddress,
       city: frontendRequest.farmLocation.city,
       state: frontendRequest.farmLocation.state,
-      county: frontendRequest.farmLocation.county,
+      county: frontendRequest.farmLocation.county || 'Unknown County',
       zip_code: frontendRequest.farmLocation.zipCode,
       country: frontendRequest.farmLocation.country,
     },
@@ -176,9 +176,9 @@ export const transformAnalysisRequest = (frontendRequest: any): any => {
       name: product.name,
       quantity: product.quantity,
       unit: product.unit,
-      specifications: product.specifications,
-      preferred_brands: product.preferredBrands,
-      max_price: product.maxPrice,
+      specifications: product.specifications || undefined,
+      preferred_brands: product.preferredBrands || undefined,
+      max_price: product.maxPrice || undefined,
     })),
   };
 };

@@ -194,6 +194,69 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* Select Dropdown Specific Styles */
+.modern-input select {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modern-input option {
+  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5530 100%);
+  color: white;
+  padding: 8px 12px;
+}
+
+.modern-input option:hover {
+  background: linear-gradient(135deg, #16a085 0%, #2ecc71 100%);
+  color: white;
+}
+
+.modern-input option:checked {
+  background: linear-gradient(135deg, #16a085 0%, #2ecc71 100%);
+  color: white;
+}
+
+/* Alternative approach for better browser compatibility */
+select.modern-input {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+select.modern-input option {
+  background: #0f2027;
+  color: white;
+  padding: 8px 12px;
+}
+
+select.modern-input option:hover,
+select.modern-input option:focus {
+  background: #2ecc71;
+  color: white;
+}
+
+/* Custom Select Component Styles */
+.shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+.bg-gradient-accent {
+  background: var(--gradient-accent);
+}
+
+.border-accent-400 {
+  border-color: #2ecc71;
+}
+
+.border-accent-400\/30 {
+  border-color: rgba(46, 204, 113, 0.3);
+}
+
 /* Button Styles */
 .btn-primary {
   background: linear-gradient(135deg, #16a085, #2ecc71);
