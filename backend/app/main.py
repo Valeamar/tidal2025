@@ -13,6 +13,7 @@ from .models import (
     ErrorResponse, 
     ErrorDetail
 )
+from .storage_utils import get_storage_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -88,6 +89,70 @@ async def analyze_products(request: AnalyzeRequest):
         }
     )
 
+# Storage management endpoints
+@app.get("/api/storage/stats")
+async def get_storage_stats():
+    """
+    Get statistics about stored data.
+    Demonstrates the storage system functionality.
+    """
+    try:
+        storage_manager = get_storage_manager()
+        stats = storage_manager.get_storage_stats()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get storage stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "STORAGE_ERROR",
+                "message": "Failed to retrieve storage statistics",
+                "retryable": True
+            }
+        )
+
+@app.get("/api/storage/sessions")
+async def list_recent_sessions(limit: int = 10):
+    """
+    List recent analysis sessions.
+    Demonstrates the session storage functionality.
+    """
+    try:
+        storage_manager = get_storage_manager()
+        sessions = storage_manager.list_recent_analyses(limit)
+        return {"sessions": sessions, "count": len(sessions)}
+    except Exception as e:
+        logger.error(f"Failed to list sessions: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "STORAGE_ERROR",
+                "message": "Failed to retrieve analysis sessions",
+                "retryable": True
+            }
+        )
+
+@app.post("/api/storage/cleanup")
+async def cleanup_old_data():
+    """
+    Clean up old cached data and analysis sessions.
+    Demonstrates the storage maintenance functionality.
+    """
+    try:
+        storage_manager = get_storage_manager()
+        cleanup_stats = storage_manager.cleanup_old_data()
+        return cleanup_stats
+    except Exception as e:
+        logger.error(f"Failed to cleanup data: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "STORAGE_ERROR",
+                "message": "Failed to cleanup old data",
+                "retryable": True
+            }
+        )
+
 # Root endpoint
 @app.get("/")
 async def root():
@@ -101,6 +166,9 @@ async def root():
         "endpoints": {
             "health": "/api/health",
             "analyze": "/api/analyze",
+            "storage_stats": "/api/storage/stats",
+            "storage_sessions": "/api/storage/sessions",
+            "storage_cleanup": "/api/storage/cleanup",
             "docs": "/docs"
         }
     }
