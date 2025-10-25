@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     log_json: bool = Field(default=False, env="LOG_JSON")
     
     # CORS Configuration
-    cors_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000",
         env="CORS_ORIGINS"
     )
     cors_credentials: bool = Field(default=True, env="CORS_CREDENTIALS")
@@ -76,13 +76,9 @@ class Settings(BaseSettings):
     enable_metrics: bool = Field(default=False, env="ENABLE_METRICS")
     metrics_port: int = Field(default=9090, env="METRICS_PORT")
     
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        """Parse CORS origins from string or list."""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
+    def get_cors_origins_list(self) -> List[str]:
+        """Get CORS origins as a list."""
+        return [origin.strip() for origin in self.cors_origins.split(",")]
     
     @field_validator("log_level")
     @classmethod
