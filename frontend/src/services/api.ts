@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { AnalysisRequest, AnalysisResponse } from '../types';
+import { AnalysisResponse, LegacyAnalysisResponse } from '../types';
+import { transformAnalysisResponse, transformAnalysisRequest } from '../utils/dataTransform';
 
 // Get API URL from environment or use default
 const getApiUrl = (): string => {
@@ -48,17 +49,34 @@ api.interceptors.response.use(
 
 // API functions
 
-export const analyzeProducts = async (data: AnalysisRequest): Promise<AnalysisResponse> => {
+export const analyzeProducts = async (data: any): Promise<LegacyAnalysisResponse> => {
   try {
-    const response = await api.post<AnalysisResponse>('/analyze', data);
-    return response.data;
+    // Transform request to backend format
+    const backendRequest = transformAnalysisRequest(data);
+    
+    const response = await api.post<AnalysisResponse>('/analyze', backendRequest);
+    
+    // Transform backend response to legacy format for existing UI components
+    return transformAnalysisResponse(response.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.code === 'ECONNREFUSED' || error.code === 'ERR_NETWORK') {
         throw new Error('Unable to connect to the analysis service. Please ensure the backend server is running.');
       }
+      if (error.response?.status === 501) {
+        throw new Error('Analysis functionality is not yet implemented on the backend. Please check back later.');
+      }
       if (error.response?.data?.error) {
         throw new Error(error.response.data.error.message || 'Analysis failed');
+      }
+      if (error.response?.data?.detail) {
+        // Handle FastAPI error format
+        const detail = error.response.data.detail;
+        if (typeof detail === 'string') {
+          throw new Error(detail);
+        } else if (detail.message) {
+          throw new Error(detail.message);
+        }
       }
       throw new Error(`Analysis failed: ${error.message}`);
     }

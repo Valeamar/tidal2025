@@ -1,8 +1,8 @@
 import React from 'react';
-import { SupplierRecommendation } from '../../types';
+import { LegacySupplierRecommendation } from '../../types';
 
 interface SupplierRecommendationsProps {
-    suppliers: SupplierRecommendation[];
+    suppliers: LegacySupplierRecommendation[];
 }
 
 const SupplierRecommendations: React.FC<SupplierRecommendationsProps> = ({ suppliers }) => {

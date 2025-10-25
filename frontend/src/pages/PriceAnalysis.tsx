@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import ProductInputForm from '../components/ProductInputForm';
 import { BudgetReport } from '../components/BudgetReport';
-import { AnalysisRequest, AnalysisResponse } from '../types';
+import { LegacyAnalysisResponse } from '../types';
 import { analyzeProducts } from '../services/api';
 
 const PriceAnalysis: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<LegacyAnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFormSubmit = async (data: AnalysisRequest) => {
+  const handleFormSubmit = async (data: any) => {
     setIsLoading(true);
     setError(null);
 

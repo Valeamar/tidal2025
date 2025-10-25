@@ -10,12 +10,14 @@ interface ProductInputFormProps {
 
 const ProductInputForm: React.FC<ProductInputFormProps> = ({ onSubmit, isLoading = false }) => {
     const [farmInfo, setFarmInfo] = useState<FarmInfo>({
-        street: '',
-        city: '',
-        state: '',
-        county: '',
-        zipCode: '',
-        country: 'United States'
+        location: {
+            streetAddress: '',
+            city: '',
+            state: '',
+            county: '',
+            zipCode: '',
+            country: 'United States'
+        }
     });
 
     const [products, setProducts] = useState<ProductInput[]>([
@@ -28,19 +30,19 @@ const ProductInputForm: React.FC<ProductInputFormProps> = ({ onSubmit, isLoading
         const newErrors: Record<string, string> = {};
 
         // Validate farm info
-        if (!farmInfo.street.trim()) {
-            newErrors.street = 'Street address is required';
+        if (!farmInfo.location.streetAddress.trim()) {
+            newErrors.streetAddress = 'Street address is required';
         }
-        if (!farmInfo.city.trim()) {
+        if (!farmInfo.location.city.trim()) {
             newErrors.city = 'City is required';
         }
-        if (!farmInfo.state.trim()) {
+        if (!farmInfo.location.state.trim()) {
             newErrors.state = 'State is required';
         }
-        if (!farmInfo.zipCode.trim()) {
+        if (!farmInfo.location.zipCode.trim()) {
             newErrors.zipCode = 'ZIP code is required';
         }
-        if (!farmInfo.country.trim()) {
+        if (!farmInfo.location.country.trim()) {
             newErrors.country = 'Country is required';
         }
 
@@ -78,7 +80,7 @@ const ProductInputForm: React.FC<ProductInputFormProps> = ({ onSubmit, isLoading
         const validProducts = products.filter(p => p.name.trim() && p.quantity > 0 && p.unit.trim());
 
         onSubmit({
-            farmInfo,
+            farmLocation: farmInfo.location,
             products: validProducts
         });
     };

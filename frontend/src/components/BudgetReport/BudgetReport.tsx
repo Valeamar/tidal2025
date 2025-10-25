@@ -1,12 +1,12 @@
 import React from 'react';
-import { AnalysisResponse } from '../../types';
+import { LegacyAnalysisResponse } from '../../types';
 import ProductAnalysisCard from './ProductAnalysisCard';
 import OverallBudgetSummary from './OverallBudgetSummary';
 import OptimizationRecommendations from './OptimizationRecommendations';
 import DataQualityReport from './DataQualityReport';
 
 interface BudgetReportProps {
-    analysisResult: AnalysisResponse;
+    analysisResult: LegacyAnalysisResponse;
     onNewAnalysis: () => void;
 }
 

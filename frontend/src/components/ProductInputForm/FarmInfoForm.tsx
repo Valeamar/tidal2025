@@ -8,17 +8,20 @@ interface FarmInfoFormProps {
 }
 
 const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors }) => {
-  const handleChange = (field: keyof FarmInfo, value: string) => {
+  const handleChange = (field: keyof FarmInfo['location'], value: string) => {
     onChange({
       ...farmInfo,
-      [field]: value
+      location: {
+        ...farmInfo.location,
+        [field]: value
+      }
     });
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Farm Shipping Address</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
           <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-2">
@@ -27,15 +30,14 @@ const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors 
           <input
             type="text"
             id="street"
-            value={farmInfo.street}
-            onChange={(e) => handleChange('street', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-              errors.street ? 'border-red-300' : 'border-gray-300'
-            }`}
+            value={farmInfo.location.streetAddress}
+            onChange={(e) => handleChange('streetAddress', e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.streetAddress ? 'border-red-300' : 'border-gray-300'
+              }`}
             placeholder="123 Farm Road"
           />
-          {errors.street && (
-            <p className="mt-1 text-sm text-red-600">{errors.street}</p>
+          {errors.streetAddress && (
+            <p className="mt-1 text-sm text-red-600">{errors.streetAddress}</p>
           )}
         </div>
 
@@ -46,11 +48,10 @@ const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors 
           <input
             type="text"
             id="city"
-            value={farmInfo.city}
+            value={farmInfo.location.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-              errors.city ? 'border-red-300' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.city ? 'border-red-300' : 'border-gray-300'
+              }`}
             placeholder="Springfield"
           />
           {errors.city && (
@@ -65,11 +66,10 @@ const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors 
           <input
             type="text"
             id="state"
-            value={farmInfo.state}
+            value={farmInfo.location.state}
             onChange={(e) => handleChange('state', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-              errors.state ? 'border-red-300' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.state ? 'border-red-300' : 'border-gray-300'
+              }`}
             placeholder="Illinois"
           />
           {errors.state && (
@@ -84,7 +84,7 @@ const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors 
           <input
             type="text"
             id="county"
-            value={farmInfo.county || ''}
+            value={farmInfo.location.county || ''}
             onChange={(e) => handleChange('county', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder="Sangamon County"
@@ -98,11 +98,10 @@ const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors 
           <input
             type="text"
             id="zipCode"
-            value={farmInfo.zipCode}
+            value={farmInfo.location.zipCode}
             onChange={(e) => handleChange('zipCode', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-              errors.zipCode ? 'border-red-300' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.zipCode ? 'border-red-300' : 'border-gray-300'
+              }`}
             placeholder="62701"
           />
           {errors.zipCode && (
@@ -116,11 +115,10 @@ const FarmInfoForm: React.FC<FarmInfoFormProps> = ({ farmInfo, onChange, errors 
           </label>
           <select
             id="country"
-            value={farmInfo.country}
+            value={farmInfo.location.country}
             onChange={(e) => handleChange('country', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-              errors.country ? 'border-red-300' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 ${errors.country ? 'border-red-300' : 'border-gray-300'
+              }`}
           >
             <option value="United States">United States</option>
             <option value="Canada">Canada</option>

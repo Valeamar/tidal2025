@@ -1,8 +1,8 @@
 import React from 'react';
-import { OptimizationRecommendation } from '../../types';
+import { LegacyOptimizationRecommendation } from '../../types';
 
 interface OptimizationRecommendationsProps {
-    recommendations: OptimizationRecommendation[];
+    recommendations: LegacyOptimizationRecommendation[];
 }
 
 const OptimizationRecommendations: React.FC<OptimizationRecommendationsProps> = ({ recommendations }) => {

@@ -1,9 +1,9 @@
 import React from 'react';
-import { PriceAnalysis } from '../../types';
+import { LegacyPriceAnalysis } from '../../types';
 import { SupplierRecommendations } from './';
 
 interface ProductAnalysisCardProps {
-    analysis: PriceAnalysis;
+    analysis: LegacyPriceAnalysis;
 }
 
 const ProductAnalysisCard: React.FC<ProductAnalysisCardProps> = ({ analysis }) => {
