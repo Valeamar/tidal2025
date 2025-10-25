@@ -86,35 +86,59 @@ const ProductInputForm: React.FC<ProductInputFormProps> = ({ onSubmit, isLoading
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-8">
-            <FarmInfoForm
-                farmInfo={farmInfo}
-                onChange={setFarmInfo}
-                errors={errors}
-            />
+        <div className="max-w-4xl mx-auto">
+            <form onSubmit={handleSubmit} className="space-y-8 slide-in-up">
+                <FarmInfoForm
+                    farmInfo={farmInfo}
+                    onChange={setFarmInfo}
+                    errors={errors}
+                />
 
-            <ProductListForm
-                products={products}
-                onChange={setProducts}
-                errors={errors}
-            />
+                <ProductListForm
+                    products={products}
+                    onChange={setProducts}
+                    errors={errors}
+                />
 
-            {errors.products && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <p className="text-red-600 text-sm">{errors.products}</p>
+                {errors.products && (
+                    <div className="glass-card border-red-500/30 bg-red-500/10 p-6">
+                        <div className="flex items-center space-x-3">
+                            <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-red-300 font-medium">{errors.products}</p>
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex justify-center pt-6">
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="group relative px-12 py-4 bg-gradient-accent text-white font-bold text-lg rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-glow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
+                    >
+                        <span className="relative z-10 flex items-center space-x-3">
+                            {isLoading ? (
+                                <>
+                                    <div className="spinner"></div>
+                                    <span>Analyzing Market Data...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    <span>Start AI Analysis</span>
+                                </>
+                            )}
+                        </span>
+                        {!isLoading && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-accent-600 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        )}
+                    </button>
                 </div>
-            )}
-
-            <div className="flex justify-end">
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200"
-                >
-                    {isLoading ? 'Analyzing...' : 'Analyze Prices'}
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     );
 };
 
