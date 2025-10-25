@@ -205,3 +205,122 @@ class SeasonalityFactors(BaseModel):
     optimal_purchase_month: int = Field(..., ge=1, le=12)
     seasonal_savings_potential: float = Field(..., ge=0, le=100)
     planting_calendar_alignment: float = Field(..., ge=0.5, le=1.5)
+
+
+# AWS BI Data Models
+
+class ForecastPrediction(BaseModel):
+    """Individual forecast prediction point"""
+    date: str = Field(..., description="ISO date string for prediction")
+    predicted_price: float = Field(..., gt=0)
+    confidence_interval: Dict[str, float] = Field(
+        ..., 
+        description="Contains 'lower' and 'upper' confidence bounds"
+    )
+
+class ForecastResult(BaseModel):
+    """Amazon Forecast service results"""
+    predictions: List[ForecastPrediction] = []
+    trend: str = Field(..., description="Overall trend: 'declining', 'increasing', 'stable'")
+    confidence: float = Field(..., ge=0, le=1, description="Overall forecast confidence")
+    lowest_price_date: Optional[str] = Field(None, description="Date of predicted lowest price")
+    predicted_lowest_price: Optional[float] = Field(None, gt=0)
+    decline_percentage: Optional[float] = Field(None, ge=0, le=100)
+    forecast_horizon_days: int = Field(..., ge=1, le=365)
+    model_accuracy: Optional[float] = Field(None, ge=0, le=1)
+    seasonality_detected: bool = False
+    data_quality_score: float = Field(..., ge=0, le=1)
+
+class SentimentFactor(BaseModel):
+    """Individual sentiment factor analysis"""
+    factor: str = Field(..., description="Factor name (e.g., 'weather', 'fuel_prices')")
+    sentiment: str = Field(..., description="POSITIVE, NEGATIVE, or NEUTRAL")
+    confidence: float = Field(..., ge=0, le=1)
+    impact_description: str
+
+class SentimentAnalysis(BaseModel):
+    """AWS Comprehend sentiment analysis results"""
+    overall_sentiment: str = Field(..., description="POSITIVE, NEGATIVE, or NEUTRAL")
+    sentiment_score: float = Field(..., ge=0, le=1)
+    supply_risk_score: float = Field(..., ge=0, le=1)
+    demand_outlook: str = Field(..., description="Strong/Moderate/Weak demand outlook")
+    risk_level: str = Field(..., description="LOW, MEDIUM, or HIGH risk level")
+    key_factors: List[SentimentFactor] = []
+    confidence_score: float = Field(..., ge=0, le=1)
+    news_sources_analyzed: int = Field(..., ge=0)
+    analysis_date: datetime
+
+class CorrelationFactor(BaseModel):
+    """External factor correlation analysis"""
+    factor: str = Field(..., description="External factor name")
+    correlation_strength: float = Field(..., ge=-1, le=1)
+    impact_description: str
+
+class TrendAnalysis(BaseModel):
+    """Price trend analysis from QuickSight"""
+    direction: str = Field(..., description="increasing, decreasing, or stable")
+    strength: float = Field(..., ge=0, le=1, description="Trend strength indicator")
+    duration_days: int = Field(..., ge=1)
+    statistical_significance: float = Field(..., ge=0, le=1)
+
+class QuickSightInsights(BaseModel):
+    """AWS QuickSight ML insights and analytics"""
+    price_anomaly_detected: bool = False
+    anomaly_description: Optional[str] = None
+    anomaly_confidence: Optional[float] = Field(None, ge=0, le=1)
+    seasonal_pattern_detected: bool = False
+    optimal_purchase_month: Optional[str] = None
+    seasonal_savings_potential: Optional[float] = Field(None, ge=0, le=100)
+    pattern_confidence: Optional[float] = Field(None, ge=0, le=1)
+    trend_analysis: Optional[TrendAnalysis] = None
+    correlations: List[CorrelationFactor] = []
+    dashboard_url: Optional[str] = None
+    insights_generated_at: datetime
+    data_freshness_score: float = Field(..., ge=0, le=1)
+
+class AWSBIConfidenceFactors(BaseModel):
+    """Confidence score calculation factors from AWS BI services"""
+    forecast_confidence: float = Field(..., ge=0, le=1)
+    sentiment_confidence: float = Field(..., ge=0, le=1)
+    quicksight_insights_confidence: float = Field(..., ge=0, le=1)
+    data_completeness: float = Field(..., ge=0, le=1)
+    source_reliability: float = Field(..., ge=0, le=1)
+    temporal_relevance: float = Field(..., ge=0, le=1)
+
+class AWSBIAnalysisResult(BaseModel):
+    """Combined AWS BI analysis results for a product"""
+    product_name: str
+    forecast_result: Optional[ForecastResult] = None
+    sentiment_analysis: Optional[SentimentAnalysis] = None
+    quicksight_insights: Optional[QuickSightInsights] = None
+    confidence_factors: AWSBIConfidenceFactors
+    overall_bi_confidence: float = Field(..., ge=0, le=1)
+    analysis_timestamp: datetime
+    aws_services_used: List[str] = []
+    processing_time_seconds: float = Field(..., ge=0)
+
+# Data transformation models for AWS service inputs/outputs
+
+class ForecastDatasetInput(BaseModel):
+    """Input format for Amazon Forecast dataset creation"""
+    timestamp: str = Field(..., description="ISO timestamp")
+    target_value: float = Field(..., description="Price value")
+    item_id: str = Field(..., description="Product identifier")
+    location: Optional[str] = None
+    category: Optional[str] = None
+
+class ComprehendTextInput(BaseModel):
+    """Input format for AWS Comprehend analysis"""
+    text: str = Field(..., min_length=1, max_length=5000)
+    language_code: str = Field(default="en", description="Language code for analysis")
+    source_url: Optional[str] = None
+    publication_date: Optional[datetime] = None
+    source_type: str = Field(default="news", description="Type of source: news, report, social")
+
+class QuickSightDataInput(BaseModel):
+    """Input format for QuickSight data analysis"""
+    product_name: str
+    price_history: List[Dict[str, Any]] = Field(..., description="Historical price data points")
+    market_factors: Dict[str, Any] = Field(default_factory=dict)
+    location_data: Optional[Dict[str, Any]] = None
+    seasonal_indicators: Optional[Dict[str, Any]] = None
